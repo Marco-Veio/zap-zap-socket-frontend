@@ -1,6 +1,6 @@
 "use client";
 
-import { SubmitEvent, useEffect, useState } from "react";
+import { SubmitEvent, useEffect, useMemo, useState } from "react";
 import io from "socket.io-client";
 
 interface Message {
@@ -10,7 +10,7 @@ interface Message {
 }
 
 export default function Home() {
-  const socket = io("http://localhost:8080");
+  const socket = useMemo(() => io(process.env.NEXT_PUBLIC_API_URL), []);
 
   const [messages, setMessages] = useState([] as Message[]);
   const [author, setAuthor] = useState("");
@@ -30,7 +30,7 @@ export default function Home() {
 
   function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
-    fetch("http://localhost:8080/message", {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
