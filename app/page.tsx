@@ -1,10 +1,13 @@
 "use client";
 
+import { PaperclipIcon } from "lucide-react";
+import Image from "next/image";
 import { SubmitEvent, useEffect, useMemo, useState } from "react";
 import io from "socket.io-client";
 
 interface Message {
   message: string;
+  url?: string;
   author: string;
   date: string;
 }
@@ -45,6 +48,24 @@ export default function Home() {
       .finally(() => setNewMessage(""));
   }
 
+  function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("author", author);
+    formData.append("date", new Date().toISOString());
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/images`, {
+      method: "POST",
+      body: formData,
+    }).catch(() => alert("Erro ao enviar a imagem"));
+  }
+
   return (
     <main className="w-screen h-screen bg-black text-white">
       <div className="h-[5%]">
@@ -68,7 +89,19 @@ export default function Home() {
                 {message.author}
               </p>
             )}
-            <p>{message.message}</p>
+
+            {message.url ? (
+              <Image
+                src={message.url}
+                alt="imagem recebida"
+                width={200}
+                height={200}
+                // unoptimized
+              />
+            ) : (
+              <p>{message.message}</p>
+            )}
+
             <p className="text-sm text-gray-500">
               {new Date(message.date).toLocaleDateString("pt-BR", {
                 day: "2-digit",
@@ -91,6 +124,20 @@ export default function Home() {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
           />
+
+          <div>
+            <label htmlFor="image" className="cursor-pointer rounded-full">
+              <PaperclipIcon size={20} />
+            </label>
+            <input
+              type="file"
+              id="image"
+              accept="image/*"
+              hidden
+              onChange={handleImage}
+            />
+          </div>
+
           <button
             className="border border-white/50 px-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             type="submit"
